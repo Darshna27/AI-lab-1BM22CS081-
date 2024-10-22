@@ -1,0 +1,142 @@
+import random
+
+def initial_state(n):
+    """
+    Generates a random initial state with n queens placed on the board.
+    Each queen is represented by its column index in a row.
+    
+    Arguments:
+    n -- The number of queens (and the size of the board).
+    
+    Returns:
+    A list representing the initial state.
+    """
+    return [random.randint(0, n - 1) for _ in range(n)]
+
+def successors(state):
+    """
+    Generates all possible successors by moving each queen to a different column.
+    
+    Arguments:
+    state -- The current state of the board.
+    
+    Returns:
+    A list of new states (neighbors).
+    """
+    neighbors = []
+    n = len(state)
+    
+    for row in range(n):
+        for col in range(n):
+            if col != state[row]:  # Avoid moving the queen to its current column
+                new_state = state[:]  # Create a copy of the current state
+                new_state[row] = col  # Move the queen in the row to a different column
+                neighbors.append(new_state)  # Add the new state to the list
+    
+    return neighbors
+
+def value(state):
+    """
+    Calculates the number of attacking pairs of queens in the current state.
+    
+    Arguments:
+    state -- The current state of the board.
+    
+    Returns:
+    The number of attacking pairs.
+    """
+    conflicts = 0
+    n = len(state)
+    
+    for i in range(n):
+        for j in range(i + 1, n):
+            if state[i] == state[j] or abs(state[i] - state[j]) == j - i:
+                # Check if queens are in the same column or on the same diagonal
+                conflicts += 1
+    
+    return conflicts
+
+def best_successor(state):
+    """
+    Finds the neighbor with the lowest number of conflicts.
+    
+    Arguments:
+    state -- The current state of the board.
+    
+    Returns:
+    The best neighboring state.
+    """
+    neighbors = successors(state)
+    best_neighbor = state  # Start with the current state
+    lowest_value = value(state)  # Start with the current state's value
+    
+    for neighbor in neighbors:
+        neighbor_value = value(neighbor)
+        if neighbor_value < lowest_value:
+            lowest_value = neighbor_value
+            best_neighbor = neighbor  # Update the best neighbor
+    
+    return best_neighbor
+
+def print_board(state):
+    """
+    Prints the board state with queens and empty spaces.
+    
+    Arguments:
+    state -- The current state of the board.
+    """
+    n = len(state)
+    board = []
+    for row in range(n):
+        line = ['.'] * n  # Initialize a row with empty spaces
+        line[state[row]] = 'Q'  # Place a queen
+        board.append(' '.join(line))  # Join the row for better formatting
+    
+    print("\n".join(board))  # Print the board
+
+def hill_climbing_n_queens(n):
+    """
+    Solves the N-Queens problem using the Hill Climbing algorithm.
+    
+    Arguments:
+    n -- The number of queens (and the size of the board).
+    
+    Returns:
+    A state that is a local maximum (ideally a solution).
+    """
+    current_state = initial_state(n)  # Start with a random initial state
+    iterations = 0  # Initialize iteration counter
+    
+    while True:
+        iterations += 1
+        neighbor = best_successor(current_state)  # Get the best neighbor
+        
+        # Print the current state and number of attacking pairs
+        print(f"Iteration {iterations}:")
+        print_board(current_state)  # Print the board state
+        print(f"Attacking pairs: {value(current_state)}\n")
+        
+        if value(neighbor) >= value(current_state):  # No improvement
+            print(f"Final state after {iterations} iterations:")
+            print_board(current_state)  # Print the final state
+            print(f"Attacking pairs: {value(current_state)}")
+            return current_state  # Return the current state
+        
+        current_state = neighbor  # Move to the neighbor state
+
+if __name__ == "__main__":
+    # Get the number of queens from the user
+    n = int(input("Enter the number of queens (N): "))
+    
+    # Solve the N-Queens problem using Hill Climbing
+    solution = hill_climbing_n_queens(n)
+    
+    # Print the solution
+    print("Solution state (column positions of queens):", solution)
+    print("Number of attacking pairs:", value(solution))
+    
+    # Check if the solution is valid (no attacking queens)
+    if value(solution) == 0:
+        print("Found a valid solution!")
+    else:
+        print("No valid solution found. This is a local maximum.")
