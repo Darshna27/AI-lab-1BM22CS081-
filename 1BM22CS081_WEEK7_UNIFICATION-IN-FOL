@@ -1,0 +1,39 @@
+def unify(term1, term2, subst=None):
+    if subst is None:
+        subst = {}
+    if term1 == term2:
+        return subst
+    if isinstance(term1, str) and term1.startswith('?'):
+        return unify_var(term1, term2, subst)
+    if isinstance(term2, str) and term2.startswith('?'):
+        return unify_var(term2, term1, subst)
+    if isinstance(term1, tuple) and isinstance(term2, tuple):
+        if len(term1) != len(term2):
+            return None
+        for t1, t2 in zip(term1, term2):
+            subst = unify(t1, t2, subst)
+            if subst is None:
+                return None
+        return subst
+    return None
+
+def unify_var(var, term, subst):
+    if var in subst:
+        return unify(subst[var], term, subst)
+    if term in subst:
+        return unify(var, subst[term], subst)
+    if var == term:
+        return subst
+    subst[var] = term
+    return subst
+
+# User Input and Execution
+if __name__ == "__main__":
+    term1 = eval(input("Enter the first term (e.g., ('f', '?x', 'a')): "))
+    term2 = eval(input("Enter the second term (e.g., ('f', 'b', 'a')): "))
+
+    result = unify(term1, term2)
+    if result is not None:
+        print("Unification successful! Substitution set:", result)
+    else:
+        print("Unification failed!")
