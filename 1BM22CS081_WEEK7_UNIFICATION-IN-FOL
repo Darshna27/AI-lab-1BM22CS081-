@@ -17,7 +17,22 @@ def unify(term1, term2, subst=None):
         return subst
     return None
 
+def occurs_check(var, term):
+    """Check if variable appears in the term."""
+    if isinstance(term, tuple):
+        # Check recursively if the variable appears in any part of the tuple
+        for subterm in term:
+            if occurs_check(var, subterm):
+                return True
+    elif var == term:
+        return True
+    return False
+
 def unify_var(var, term, subst):
+    """Unify a variable with a term."""
+    # Occurs check to avoid recursive unification
+    if occurs_check(var, term):
+        return None  # Failure: variable occurs inside the term
     if var in subst:
         return unify(subst[var], term, subst)
     if term in subst:
