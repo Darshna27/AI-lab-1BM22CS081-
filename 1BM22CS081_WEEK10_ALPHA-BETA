@@ -1,0 +1,106 @@
+class AlphaBetaPruning:
+    def __init__(self):
+        """
+        Initializes the game tree dictionary and pruned nodes list.
+        """
+        self.game_tree = {}
+        self.pruned_nodes = []
+
+    def create_game_tree(self):
+        """
+        Method to create the game tree based on user input.
+        """
+        num_nodes = int(input("Enter the number of nodes in the game tree: "))
+        
+        for _ in range(num_nodes):
+            node = input("Enter node name: ")
+            node_type = input(f"Enter the type for node {node} (MAX or MIN): ").strip().upper()
+            
+            if node_type not in ['MAX', 'MIN']:
+                print("Invalid type, it should be 'MAX' or 'MIN'.")
+                continue
+            
+            # For internal nodes, ask for children
+            if node_type == "MAX" or node_type == "MIN":
+                is_leaf = input(f"Is {node} a leaf node? (yes/no): ").strip().lower()
+                if is_leaf == 'yes':
+                    node_value = int(input(f"Enter value for leaf node {node}: "))
+                    self.game_tree[node] = (node_type, node_value, [])
+                else:
+                    children = input(f"Enter children for node {node} (comma-separated): ").split(',')
+                    children = [child.strip() for child in children]
+                    self.game_tree[node] = (node_type, None, children)
+            else:
+                print("Invalid node type. Skipping node creation.")
+
+    def alpha_beta(self, node, alpha, beta, is_maximizing_player):
+        """
+        Perform the Alpha-Beta pruning algorithm.
+        
+        :param node: Current node to evaluate
+        :param alpha: The current alpha value
+        :param beta: The current beta value
+        :param is_maximizing_player: True if the current node is a MAX node, False for MIN node
+        :return: The evaluated value of the current node
+        """
+        node_type, node_value, children = self.game_tree[node]
+        
+        if not children:  # If it's a leaf node, return its value
+            print(f"Evaluating {node}: {node_value}")
+            return node_value
+        
+        if is_maximizing_player:
+            # MAX node: Try to maximize the value
+            max_eval = float('-inf')
+            for child in children:
+                eval_value = self.alpha_beta(child, alpha, beta, False)
+                max_eval = max(max_eval, eval_value)
+                
+                # Update alpha value
+                alpha = max(alpha, max_eval)
+                print(f"At {node}, alpha updated to {alpha}")
+                
+                # Prune if beta <= alpha
+                if beta <= alpha:
+                    print(f"Pruning {child} at {node} (alpha={alpha}, beta={beta})")
+                    self.pruned_nodes.append(child)
+                    break
+                    
+            return max_eval
+        
+        else:
+            # MIN node: Try to minimize the value
+            min_eval = float('inf')
+            for child in children:
+                eval_value = self.alpha_beta(child, alpha, beta, True)
+                min_eval = min(min_eval, eval_value)
+                
+                # Update beta value
+                beta = min(beta, min_eval)
+                print(f"At {node}, beta updated to {beta}")
+                
+                # Prune if beta <= alpha
+                if beta <= alpha:
+                    print(f"Pruning {child} at {node} (alpha={alpha}, beta={beta})")
+                    self.pruned_nodes.append(child)
+                    break
+            
+            return min_eval
+    
+    def get_pruned_nodes(self):
+        """Returns the list of pruned nodes"""
+        return self.pruned_nodes
+
+# Create an instance of the AlphaBetaPruning class
+alpha_beta_pruning = AlphaBetaPruning()
+
+# Step 1: Create the game tree by taking user inputs
+alpha_beta_pruning.create_game_tree()
+
+# Step 2: Start the Alpha-Beta pruning on the root node with initial alpha=-inf and beta=inf
+root_node = input("Enter the root node to start the Alpha-Beta pruning: ").strip()
+final_value = alpha_beta_pruning.alpha_beta(root_node, float('-inf'), float('inf'), True)
+
+# Step 3: Output the final value and the pruned subtrees
+print(f"\nFinal value for {root_node}: {final_value}")
+print(f"Pruned subtrees: {alpha_beta_pruning.get_pruned_nodes()}")
